@@ -14,20 +14,56 @@ BASE_URL = "https://api.telegram.org/bot{}".format(TOKEN)
 def listen_and_send(event, context):
     try:
         data = json.loads(event["body"])
-        # print(data)
+        print(data)
         message = ""
         event = str(data["webhookEvent"])
         issue = str(data["issue"]["key"])
         issue_summary = str(data["issue"]["fields"]["summary"])
         url = "https://aatos.atlassian.net/browse/" + issue
-        user = str(data["user"]["displayName"])
 
         if event == "jira:issue_deleted":
-            message = 'Issue: "' + issue_summary + '" deleted by ' + user
+            user = str(data["user"]["displayName"])
+            message = '🚮 Issue: "{}" deleted by {}.'.format(issue_summary, user)
         elif event == "jira:issue_created":
-            message = 'Issue: "' + issue_summary + '" created by ' + user + '. ' + url + '. '
+            user = str(data["user"]["displayName"])
+            message = '🐣 Issue: "{}" created by {}. {}'.format(issue_summary, user, url)
+        elif event == "jira:issue_updated":
+            user = str(data["user"]["displayName"])
+            changelog = data["changelog"]["items"]
+            if changelog["items"]["field"] == "description":
+                description = str(changelog["items"]["toString"])
+                message = '{} updated the decrption of "{}" to "{}"'.format(user, issue_summary, description)
+            elif changelog["items"]["field"] == "summary":
+                from_string = str(changelog["items"]["fromString"])
+                to_string = str(changelog["items"]["toString"])
+                message = '{} updated issue "{}" to "{}"'.format(user, from_string, to_string)
+            elif changelog["items"]["field"] == "status":
+                from_string = str(changelog["items"]["fromString"])
+                to_string = str(changelog["items"]["toString"])
+                message = '{} updated issue "{}" status from "{}" to "{}"'.format(user, issue_summary, from_string, to_string)
+            elif changelog["items"]["field"] == "labels":
+                from_string = str(changelog["items"]["fromString"])
+                to_string = str(changelog["items"]["toString"])
+                message = '{} updated issue "{}" labels from "{}" to "{}"'.format(user, issue_summary, from_string, to_string)
+            elif changelog["items"]["field"] == "assignee":
+                to_string = str(changelog["items"]["toString"])
+                message = '"{}" assigned to {}'.format(issue_summary, to_string)
+            else:
+                message = 'Issue "{}" updated by {}. Changelog: {}.'.format(issue_summary, user, str(data["changelog"]["items"]))
+        elif event == "comment_created":
+            user = str(data["comment"]["author"]["displayName"])
+            comment = str(data["comment"]["body"])
+            message = '💬 {} commented on issue "{}": "{}"'.format(user, issue_summary, comment)
+        elif event == "comment_updated":
+            user = str(data["comment"]["updateAuthor"]["displayName"])
+            comment = str(data["comment"]["body"])
+            message = '💬 {} updated comment on issue "{}": "{}"'.format(user, issue_summary, comment)
+        elif event == "comment_deleted":
+            user = str(data["comment"]["updateAuthor"]["displayName"])
+            comment = str(data["comment"]["body"])
+            message = '💬 {} deleted comment on issue "{}": "{}"'.format(user, issue_summary, comment)
         else:
-            message = event.replace("jira:", "").replace("_", " ").capitalize() + ' by ' + user + '. ' + url + '. ' + "Changelog: " + str(data["changelog"]["items"])
+            raise ValueError('Event type not recognized')
 
         data = {"text": message.encode("utf8"), "chat_id": CHAT_ID}
         url = BASE_URL + "/sendMessage"
