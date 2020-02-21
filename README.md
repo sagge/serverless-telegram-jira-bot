@@ -1,3 +1,6 @@
 pip3 install -r requirements.txt -t modules
 
-sls deploy --telegramToken <TELEGRAM_TOKEN> --chatId <CHAT_ID>
+export TELEGRAM_TOKEN="<TELEGRAM_TOKEN>"
+export CHAT_ID="<CHAT_ID>"
+
+sls deploy

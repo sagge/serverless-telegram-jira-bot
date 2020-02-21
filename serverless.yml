@@ -1,19 +1,13 @@
 service: telegram-jira-bot
 
-custom:
-  # Our stage is based on what is passed in when running serverless
-  # commands.
-  telegramToken: ${opt:telegramToken}
-  chatId: ${opt:chatId}
-
 provider:
   name: aws
   runtime: python3.7
   stage: dev
   region: eu-west-1
   environment:
-    TELEGRAM_TOKEN: ${self:custom.telegramToken}
-    CHAT_ID: ${self:custom.chatId}
+    TELEGRAM_TOKEN: ${env:TELEGRAM_TOKEN}
+    CHAT_ID: ${env:CHAT_ID}
 
 functions:
   listenAndSend:
