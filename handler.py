@@ -29,24 +29,24 @@ def listen_and_send(event, context):
             message = '🐣 Issue: "{}" created by {}. {}'.format(issue_summary, user, url)
         elif event == "jira:issue_updated":
             user = str(data["user"]["displayName"])
-            changelog = data["changelog"]["items"]
-            if changelog["items"]["field"] == "description":
-                description = str(changelog["items"]["toString"])
+            changelog = data["changelog"]["items"][0]
+            if changelog["field"] == "description":
+                description = str(changelog["toString"])
                 message = '{} updated the decrption of "{}" to "{}"'.format(user, issue_summary, description)
-            elif changelog["items"]["field"] == "summary":
-                from_string = str(changelog["items"]["fromString"])
-                to_string = str(changelog["items"]["toString"])
+            elif changelog["field"] == "summary":
+                from_string = str(changelog["fromString"])
+                to_string = str(changelog["toString"])
                 message = '{} updated issue "{}" to "{}"'.format(user, from_string, to_string)
-            elif changelog["items"]["field"] == "status":
-                from_string = str(changelog["items"]["fromString"])
-                to_string = str(changelog["items"]["toString"])
+            elif changelog["field"] == "status":
+                from_string = str(changelog["fromString"])
+                to_string = str(changelog["toString"])
                 message = '{} updated issue "{}" status from "{}" to "{}"'.format(user, issue_summary, from_string, to_string)
-            elif changelog["items"]["field"] == "labels":
-                from_string = str(changelog["items"]["fromString"])
-                to_string = str(changelog["items"]["toString"])
+            elif changelog["field"] == "labels":
+                from_string = str(changelog["fromString"])
+                to_string = str(changelog["toString"])
                 message = '{} updated issue "{}" labels from "{}" to "{}"'.format(user, issue_summary, from_string, to_string)
-            elif changelog["items"]["field"] == "assignee":
-                to_string = str(changelog["items"]["toString"])
+            elif changelog["field"] == "assignee":
+                to_string = str(changelog["toString"])
                 message = '"{}" assigned to {}'.format(issue_summary, to_string)
             else:
                 message = 'Issue "{}" updated by {}. Changelog: {}.'.format(issue_summary, user, str(data["changelog"]["items"]))
