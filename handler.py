@@ -29,7 +29,7 @@ def listen_and_send(event, context):
             message = '🐣 Issue: "{}" created by {}. {}'.format(issue_summary, user, url)
         elif event == "jira:issue_updated":
             user = str(data["user"]["displayName"])
-            changelog = data["changelog"]["items"][0]
+            changelog = data["changelog"]["items"][-1]
             if changelog["field"] == "description":
                 description = str(changelog["toString"])
                 message = '{} updated the decrption of "{}" to "{}"'.format(user, issue_summary, description)
@@ -37,10 +37,21 @@ def listen_and_send(event, context):
                 from_string = str(changelog["fromString"])
                 to_string = str(changelog["toString"])
                 message = '{} updated issue "{}" to "{}"'.format(user, from_string, to_string)
-            elif changelog["field"] == "status":
+            elif changelog["field"] == "status" or changelog["field"] == "resolution":
                 from_string = str(changelog["fromString"])
                 to_string = str(changelog["toString"])
-                message = '{} updated issue "{}" status from "{}" to "{}"'.format(user, issue_summary, from_string, to_string)
+                if to_string == "Done":
+                    message = '✅ {} moved issue "{}" to "{}"'.format(user, issue_summary, to_string)
+                elif to_string == "Review":
+                    message = '🔎 {} moved issue "{}" to "{}"'.format(user, issue_summary, to_string)
+                elif to_string == "Blocked":
+                    message = '🚫 {} moved issue "{}" to "{}"'.format(user, issue_summary, to_string)
+                elif to_string == "In Progress":
+                    message = '🏗 {} moved issue "{}" to "{}"'.format(user, issue_summary, to_string)
+                elif to_string == "To Do":
+                    message = '🧱 {} moved issue "{}" to "{}"'.format(user, issue_summary, to_string)
+                else:
+                    message = '{} updated issue "{}" status from "{}" to "{}"'.format(user, issue_summary, from_string, to_string)
             elif changelog["field"] == "labels":
                 from_string = str(changelog["fromString"])
                 to_string = str(changelog["toString"])
@@ -48,6 +59,8 @@ def listen_and_send(event, context):
             elif changelog["field"] == "assignee":
                 to_string = str(changelog["toString"])
                 message = '"{}" assigned to {}'.format(issue_summary, to_string)
+            elif changelog["field"] == "Rank":
+                raise ValueError('Unimportant event')
             else:
                 message = 'Issue "{}" updated by {}. Changelog: {}.'.format(issue_summary, user, str(data["changelog"]["items"]))
         elif event == "comment_created":
